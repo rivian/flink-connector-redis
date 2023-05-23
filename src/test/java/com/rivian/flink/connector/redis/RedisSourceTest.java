@@ -1,4 +1,4 @@
-package com.rivian.rdata.flink.redis;
+package com.rivian.flink.connector.redis;
 
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;

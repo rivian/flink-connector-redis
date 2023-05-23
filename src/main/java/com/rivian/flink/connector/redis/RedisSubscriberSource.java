@@ -1,9 +1,8 @@
-package com.rivian.rdata.flink.redis;
+package com.rivian.flink.connector.redis;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
-import org.apache.flink.util.OutputTag;
 import redis.clients.jedis.*;
 
 /**
