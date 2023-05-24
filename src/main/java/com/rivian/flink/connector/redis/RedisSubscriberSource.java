@@ -8,7 +8,7 @@ import redis.clients.jedis.*;
 /**
  * Created by Pramod Immaneni <pimmaneni@rivian.com> on 5/1/22
  */
-public class RedisSubscriberSource extends RichParallelSourceFunction<RedisSubscriberSource.Message> {
+public class RedisSubscriberSource extends RichParallelSourceFunction<Message> {
 
     transient UnifiedJedis jedis;
     transient Subscriber subscriber;
@@ -25,6 +25,8 @@ public class RedisSubscriberSource extends RichParallelSourceFunction<RedisSubsc
     Mode mode = Mode.STANDALONE;
     String[] channels;
     String[] patterns;
+
+    boolean emitControl;
 
     @Override
     public void open(Configuration config) throws Exception {
@@ -77,125 +79,30 @@ public class RedisSubscriberSource extends RichParallelSourceFunction<RedisSubsc
 
         @Override
         public void onSubscribe(String channel, int subscribedChannels) {
-            //ctx.collect(new Message(Message.Type.SUBSCRIBE, channel, null, null, subscribedChannels));
+            if (emitControl) {
+                ctx.collect(new Message(Message.Type.SUBSCRIBE, channel, null, null, subscribedChannels));
+            }
         }
 
         @Override
         public void onUnsubscribe(String channel, int subscribedChannels) {
-            //ctx.collect(new Message(Message.Type.UNSUBSCRIBE, channel, null, null, subscribedChannels));
+            if (emitControl) {
+                ctx.collect(new Message(Message.Type.UNSUBSCRIBE, channel, null, null, subscribedChannels));
+            }
         }
 
         @Override
         public void onPUnsubscribe(String pattern, int subscribedChannels) {
-            //ctx.collect(new Message(Message.Type.P_UNSUBSCRIBE, null, null, pattern, subscribedChannels));
+            if (emitControl) {
+                ctx.collect(new Message(Message.Type.P_UNSUBSCRIBE, null, null, pattern, subscribedChannels));
+            }
         }
 
         @Override
         public void onPSubscribe(String pattern, int subscribedChannels) {
-            //ctx.collect(new Message(Message.Type.P_SUBSCRIBE, null, null, pattern, subscribedChannels));
-        }
-    }
-
-    public static class Message {
-        enum Type {
-            MESSAGE, P_MESSAGE, SUBSCRIBE, UNSUBSCRIBE, P_SUBSCRIBE, P_UNSUBSCRIBE
-        }
-
-        Type type;
-        String channel;
-        String message;
-        String pattern;
-        int channels;
-
-        public Message() {
-        }
-
-        public Message(Type type, String channel, String message, String pattern, int channels) {
-            this.type = type;
-            this.channel = channel;
-            this.message = message;
-            this.pattern = pattern;
-            this.channels = channels;
-        }
-
-        public Type getType() {
-            return type;
-        }
-
-        public String getChannel() {
-            return channel;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public String getPattern() {
-            return pattern;
-        }
-
-        public int getChannels() {
-            return channels;
-        }
-
-        @Override
-        public String toString() {
-            return "Message{" +
-                    "type=" + type +
-                    ", channel='" + channel + '\'' +
-                    ", message='" + message + '\'' +
-                    ", pattern='" + pattern + '\'' +
-                    ", channels=" + channels +
-                    '}';
-        }
-    }
-
-    public static class ControlMessage {
-        Message.Type type;
-        String channel;
-        String pattern;
-        int channels;
-
-        public ControlMessage() {
-        }
-
-        public ControlMessage(Message.Type type, String channel, String pattern, int channels) {
-            this.type = type;
-            this.channel = channel;
-            this.pattern = pattern;
-            this.channels = channels;
-        }
-
-        public Message.Type getType() {
-            return type;
-        }
-
-        public void setType(Message.Type type) {
-            this.type = type;
-        }
-
-        public String getChannel() {
-            return channel;
-        }
-
-        public void setChannel(String channel) {
-            this.channel = channel;
-        }
-
-        public String getPattern() {
-            return pattern;
-        }
-
-        public void setPattern(String pattern) {
-            this.pattern = pattern;
-        }
-
-        public int getChannels() {
-            return channels;
-        }
-
-        public void setChannels(int channels) {
-            this.channels = channels;
+            if (emitControl) {
+                ctx.collect(new Message(Message.Type.P_SUBSCRIBE, null, null, pattern, subscribedChannels));
+            }
         }
     }
 
@@ -281,5 +188,13 @@ public class RedisSubscriberSource extends RichParallelSourceFunction<RedisSubsc
 
     public void setPatterns(String... patterns) {
         this.patterns = patterns;
+    }
+
+    public boolean isEmitControl() {
+        return emitControl;
+    }
+
+    public void setEmitControl(boolean emitControl) {
+        this.emitControl = emitControl;
     }
 }

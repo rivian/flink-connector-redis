@@ -15,11 +15,11 @@ public class RedisSourceTest {
 
         RedisSubscriberSource source = new RedisSubscriberSource();
         source.setPatterns("test/*");
-        DataStream<RedisSubscriberSource.Message> stream = env.addSource(source);
+        DataStream<Message> stream = env.addSource(source);
 
-        DataStream<RedisSubscriberSource.Message> keyStream = stream.keyBy(RedisSubscriberSource.Message::getMessage);
+        DataStream<Message> keyStream = stream.keyBy(Message::getMessage);
 
-        PrintSinkFunction<RedisSubscriberSource.Message> sink = new PrintSinkFunction<>();
+        PrintSinkFunction<Message> sink = new PrintSinkFunction<>();
         keyStream.addSink(sink).setParallelism(2);
 
         env.execute("RedisSourceTest");
